@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presensi Kehadiran Kelas</title>
+    <style>
+        /* Pengaturan Dasar & Palet Warna (TETAP SAMA) */
+        :root {
+            --dark-green: #043915;
+            --medium-green: #4c763b;
+            --light-green: #b0ce88;
+            --light-yellow: #fefc8e;
+            --white: #FFFFFF;
+            --black: #000000;
+            --light-gray-bg: #f5f5f5;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-gray-bg);
+            color: var(--black);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header (TETAP SAMA) */
+        header {
+            background-color: var(--dark-green);
+            color: var(--white);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .header-logo {
+            height: 50px; 
+            margin-right: 15px;
+        }
+
+        header h1 {
+            font-size: 1.1em;
+            margin: 0;
+            font-weight: bold;
+        }
+        
+        #progressInfo {
+            font-size: 0.9em;
+            margin-top: 4px;
+        }
+
+        /* Konten Utama (TETAP SAMA) */
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #game-container, #initial-screen, #result-area {
+            background-color: var(--white);
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        /* Tampilan Awal (Input diubah, Style TETAP SAMA) */
+        #initial-screen h2 {
+            color: var(--dark-green);
+            margin-top: 0;
+        }
+
+        #initial-screen input {
+            padding: 12px;
+            margin-bottom: 15px;
+            width: 90%;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            font-size: 1em;
+            text-align: center;
+        }
+
+        #start-btn {
+            background-color: var(--medium-green);
+            color: var(--white);
+        }
+
+        /* Tampilan Game/Selfie (Style TETAP SAMA) */
+        #game-container {
+            display: none;
+        }
+
+        /* Area Skor Dihapus, tidak perlu CSS */
+
+        /* Gaya untuk Gambar Komponen TETAP SAMA.
+           Kita tambahkan #webcam-feed agar gayanya mirip.
+        */
+        #component-image, #webcam-feed {
+            width: 80%; 
+            max-width: 250px; 
+            height: auto; 
+            margin: 10px auto 20px auto; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: block; 
+            min-height: 150px; 
+            background-color: var(--light-gray-bg);
+            /* Menambahkan ini agar video terbalik seperti cermin */
+            transform: scaleX(-1); 
+        }
+        
+        /* Ini untuk membatalkan cermin pada gambar hasil foto */
+        #component-image {
+             transform: scaleX(1);
+        }
+        /* Akhir Gaya untuk Gambar/Video Komponen */
+
+
+        #component-name {
+            font-size: 1.5em; /* Ukuran font diubah agar pas */
+            color: var(--dark-green);
+            font-weight: bold;
+            margin: 15px 0 20px 0;
+            padding: 15px;
+            background-color: var(--light-yellow);
+            border-radius: 8px;
+        }
+
+        #button-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        /* ID Tombol #biotik-btn & #abiotik-btn TETAP SAMA di CSS */
+        /* Kita hanya akan mengubah teks dan fungsinya di HTML & JS */
+        #biotik-btn {
+            background-color: var(--medium-green);
+            color: var(--white);
+        }
+
+        #abiotik-btn {
+            background-color: var(--light-green);
+            color: var(--black);
+        }
+        
+        /* Tombol nonaktif (Tambahan kecil) */
+        button:disabled {
+            background-color: #ccc;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        /* Area Feedback Dihapus */
+
+        /* Tampilan Hasil (Style TETAP SAMA) */
+        #result-area {
+            display: none;
+            border: 4px solid var(--dark-green);
+        }
+
+        #result-area h2 {
+            color: var(--dark-green);
+            font-size: 1.8em;
+            margin-top: 0;
+        }
+
+        #result-details {
+            text-align: left;
+            margin: 15px 0;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        
+        #result-details p {
+            margin: 8px 0;
+        }
+        
+        /* CSS untuk gambar selfie di hasil akhir */
+        #final-selfie {
+            width: 100%;
+            max-width: 200px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: block;
+            border: 2px solid var(--medium-green);
+        }
+
+        #print-btn {
+            background-color: var(--medium-green);
+            color: var(--white);
+            padding: 12px 24px;
+            margin-top: 15px;
+        }
+        
+        /* Footer (TETAP SAMA) */
+        footer {
+            background-color: var(--dark-green);
+            color: var(--white);
+            text-align: center;
+            padding: 15px;
+            font-size: 0.9em;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Media Query (TETAP SAMA) */
+        @media (min-width: 600px) {
+            #button-area {
+                flex-direction: row;
+                justify-content: space-around;
+            }
+            button {
+                width: 48%;
+            }
+             header h1 {
+                font-size: 1.5em;
+            }
+        }
+        
+        /* Pengaturan Cetak (TETAP SAMA) */
+        @media print {
+            body { background-color: white; }
+            header, footer, #initial-screen, #game-container, #print-btn { display: none !important; }
+            main { padding: 0; }
+            #result-area { 
+                display: block !important;
+                box-shadow: none; 
+                border: 2px solid black; 
+                max-width: 100%; 
+                width: 100%;
+                margin: 0;
+            }
+            /* Memastikan foto juga tercetak */
+            #final-selfie {
+                 max-width: 250px !important;
+                 border: 1px solid black;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <img id="logo" src="SEOLIS.png" alt="Logo SEOLIS" class="header-logo">
+        <div class="header-text">
+            <h1>Presensi Kehadiran Kelas</h1>
+            <div id="progressInfo">Langkah 1: Isi Identitas</div>
+        </div>
+    </header>
+
+    <main>
+        <div id="initial-screen">
+            <h2>Selamat Datang!</h2>
+            <p>Masukkan identitas Anda untuk melakukan presensi.</p>
+            <input type="text" id="student-name" placeholder="Nama Lengkap Peserta Didik" required>
+            <input type="text" id="student-class" placeholder="Kelas (Contoh: 7A)" required>
+            <input type="number" id="student-number" placeholder="Nomor Absen" required>
+            <button id="start-btn" onclick="startSelfie()">Lanjut Ambil Foto</button>
+        </div>
+
+        <div id="game-container">
+            <div id="question-area">
+                <h2 id="component-name">Posisikan Wajah di Kamera</h2>
+                
+                <video id="webcam-feed" autoplay playsinline></video>
+                
+                <img id="component-image" src="" alt="Preview Selfie" style="display:none;">
+            </div>
+            
+            <div id="button-area">
+                <button id="biotik-btn" onclick="takeSelfie()">Ambil Foto</button>
+                <button id="abiotik-btn" onclick="submitAttendance()" disabled>Kirim Presensi</button>
+            </div>
+        </div>
+
+        <div id="result-area">
+            <h2>Konfirmasi Presensi</h2>
+            <div id="result-details">
+                </div>
+            <button id="print-btn" onclick="window.print()">Cetak (Simpan PDF)</button>
+        </div>
+    </main>
+    
+    <footer>&copy; 2025 Seoludut Education Learning System</footer>
+
+    <script>
+        // Variabel Global untuk menyimpan data
+        let studentName = '';
+        let studentClass = '';
+        let studentNumber = '';
+        let capturedSelfieData = null; // Untuk menyimpan data URL gambar
+        let webcamStream = null; // Untuk menyimpan stream webcam
+
+        // Mengambil elemen-elemen DOM
+        const initialScreen = document.getElementById('initial-screen');
+        const gameContainer = document.getElementById('game-container');
+        const resultArea = document.getElementById('result-area');
+        const progressInfo = document.getElementById('progressInfo');
+        
+        const nameInput = document.getElementById('student-name');
+        const classInput = document.getElementById('student-class');
+        const numberInput = document.getElementById('student-number');
+        
+        const webcamFeed = document.getElementById('webcam-feed');
+        const componentImageDisplay = document.getElementById('component-image');
+        const instructionText = document.getElementById('component-name');
+
+        const takeSelfieBtn = document.getElementById('biotik-btn'); // Tombol "Ambil Foto"
+        const submitBtn = document.getElementById('abiotik-btn'); // Tombol "Kirim Presensi"
+
+        /**
+         * FUNGSI UNTUK MEMULAI LANGKAH SELFIE
+         */
+        function startSelfie() {
+            studentName = nameInput.value.trim();
+            studentClass = classInput.value.trim();
+            studentNumber = numberInput.value.trim();
+            
+            // Validasi input
+            if (studentName === '' || studentClass === '' || studentNumber === '') {
+                alert('Mohon isi semua data identitas (Nama, Kelas, dan Nomor Absen)!');
+                return;
+            }
+            
+            // Sembunyikan layar awal, tampilkan layar selfie
+            initialScreen.style.display = 'none';
+            resultArea.style.display = 'none';
+            gameContainer.style.display = 'block';
+            progressInfo.textContent = 'Langkah 2: Ambil Foto Diri';
+            
+            // Mulai Webcam
+            initializeWebcam();
+        }
+
+        /**
+         * FUNGSI UNTUK MENYALAKAN WEBCAM
+         */
+        async function initializeWebcam() {
+            // Hentikan stream lama jika ada
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(track => track.stop());
+            }
+
+            // Tampilkan video, sembunyikan preview gambar
+            webcamFeed.style.display = 'block';
+            componentImageDisplay.style.display = 'none';
+            instructionText.textContent = "Posisikan Wajah di Kamera";
+            takeSelfieBtn.disabled = false;
+            submitBtn.disabled = true; // Nonaktifkan tombol kirim
+
+            try {
+                // Minta izin akses webcam
+                const constraints = { video: { facingMode: 'user' }, audio: false };
+                webcamStream = await navigator.mediaDevices.getUserMedia(constraints);
+                webcamFeed.srcObject = webcamStream;
+            } catch (err) {
+                console.error("Error mengakses webcam: ", err);
+                alert("Tidak bisa mengakses webcam. Pastikan Anda memberikan izin.\n\nError: " + err.message);
+                // Kembalikan ke layar awal jika gagal
+                initialScreen.style.display = 'block';
+                gameContainer.style.display = 'none';
+                progressInfo.textContent = 'Langkah 1: Isi Identitas';
+            }
+        }
+
+        /**
+         * FUNGSI UNTUK MENGAMBIL FOTO
+         */
+        function takeSelfie() {
+            // Buat elemen canvas tersembunyi untuk menggambar frame video
+            const canvas = document.createElement('canvas');
+            canvas.width = webcamFeed.videoWidth;
+            canvas.height = webcamFeed.videoHeight;
+            
+            const context = canvas.getContext('2d');
+            
+            // Balik gambar secara horizontal (karena video dicerminkan)
+            context.translate(canvas.width, 0);
+            context.scale(-1, 1);
+            
+            // Gambar frame saat ini dari video ke canvas
+            context.drawImage(webcamFeed, 0, 0, canvas.width, canvas.height);
+            
+            // Dapatkan data URL dari gambar di canvas
+            capturedSelfieData = canvas.toDataURL('image/jpeg', 0.9); // Simpan sebagai JPEG
+            
+            // Tampilkan foto yang diambil di elemen <img>
+            componentImageDisplay.src = capturedSelfieData;
+            componentImageDisplay.style.display = 'block';
+            
+            // Sembunyikan feed video
+            webcamFeed.style.display = 'none';
+            
+            // Hentikan stream webcam
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(track => track.stop());
+                webcamStream = null;
+            }
+            
+            // Ubah UI
+            instructionText.textContent = "Foto Berhasil Diambil!";
+            takeSelfieBtn.textContent = "Ambil Ulang Foto";
+            takeSelfieBtn.onclick = initializeWebcam; // Ganti fungsi tombol menjadi "Ambil Ulang"
+            
+            submitBtn.disabled = false; // Aktifkan tombol "Kirim Presensi"
+            submitBtn.textContent = "Kirim Presensi";
+            submitBtn.onclick = submitAttendance;
+        }
+
+        /**
+         * FUNGSI UNTUK MENGIRIM PRESENSI (MENAMPILKAN HASIL)
+         */
+        function submitAttendance() {
+            if (!capturedSelfieData) {
+                alert("Silakan ambil foto terlebih dahulu!");
+                return;
+            }
+            
+            // Sembunyikan layar selfie, tampilkan layar hasil
+            gameContainer.style.display = 'none';
+            resultArea.style.display = 'block';
+            progressInfo.textContent = 'Presensi Berhasil Terkirim';
+            
+            // Buat ringkasan hasil
+            const outputText = `
+                <p><strong>Nama Lengkap:</strong> ${studentName}</p>
+                <p><strong>Kelas:</strong> ${studentClass}</p>
+                <p><strong>Nomor Absen:</strong> ${studentNumber}</p>
+                <p><strong>Foto Presensi:</strong></p>
+                <img id="final-selfie" src="${capturedSelfieData}" alt="Foto Presensi ${studentName}">
+            `;
+            
+            document.getElementById('result-details').innerHTML = outputText;
+        }
+
+    </script>
+</body>
+</html>
