@@ -77,7 +77,7 @@
             box-sizing: border-box;
         }
 
-        /* Tampilan Awal (Input diubah, Style TETAP SAMA) */
+        /* Tampilan Awal (TETAP SAMA) */
         #initial-screen h2 {
             color: var(--dark-green);
             margin-top: 0;
@@ -98,16 +98,11 @@
             color: var(--white);
         }
 
-        /* Tampilan Game/Selfie (Style TETAP SAMA) */
+        /* Tampilan Game/Selfie (TETAP SAMA) */
         #game-container {
             display: none;
         }
 
-        /* Area Skor Dihapus, tidak perlu CSS */
-
-        /* Gaya untuk Gambar Komponen TETAP SAMA.
-           Kita tambahkan #webcam-feed agar gayanya mirip.
-        */
         #component-image, #webcam-feed {
             width: 80%; 
             max-width: 250px; 
@@ -118,19 +113,15 @@
             display: block; 
             min-height: 150px; 
             background-color: var(--light-gray-bg);
-            /* Menambahkan ini agar video terbalik seperti cermin */
             transform: scaleX(-1); 
         }
         
-        /* Ini untuk membatalkan cermin pada gambar hasil foto */
         #component-image {
              transform: scaleX(1);
         }
-        /* Akhir Gaya untuk Gambar/Video Komponen */
-
 
         #component-name {
-            font-size: 1.5em; /* Ukuran font diubah agar pas */
+            font-size: 1.5em; 
             color: var(--dark-green);
             font-weight: bold;
             margin: 15px 0 20px 0;
@@ -161,8 +152,6 @@
             transform: scale(0.98);
         }
         
-        /* ID Tombol #biotik-btn & #abiotik-btn TETAP SAMA di CSS */
-        /* Kita hanya akan mengubah teks dan fungsinya di HTML & JS */
         #biotik-btn {
             background-color: var(--medium-green);
             color: var(--white);
@@ -173,16 +162,13 @@
             color: var(--black);
         }
         
-        /* Tombol nonaktif (Tambahan kecil) */
         button:disabled {
             background-color: #ccc;
             color: #666;
             cursor: not-allowed;
         }
 
-        /* Area Feedback Dihapus */
-
-        /* Tampilan Hasil (Style TETAP SAMA) */
+        /* Tampilan Hasil (TETAP SAMA) */
         #result-area {
             display: none;
             border: 4px solid var(--dark-green);
@@ -205,7 +191,6 @@
             margin: 8px 0;
         }
         
-        /* CSS untuk gambar selfie di hasil akhir */
         #final-selfie {
             width: 100%;
             max-width: 200px;
@@ -221,6 +206,16 @@
             padding: 12px 24px;
             margin-top: 15px;
         }
+        
+        /* --- CSS BARU UNTUK TOMBOL WA --- */
+        #wa-btn {
+            background-color: #25D366; /* Warna Hijau WA */
+            color: var(--white);
+            padding: 12px 24px;
+            margin-top: 10px; /* Sedikit jarak dari tombol cetak */
+        }
+        /* --- AKHIR CSS BARU --- */
+
         
         /* Footer (TETAP SAMA) */
         footer {
@@ -250,7 +245,7 @@
         /* Pengaturan Cetak (TETAP SAMA) */
         @media print {
             body { background-color: white; }
-            header, footer, #initial-screen, #game-container, #print-btn { display: none !important; }
+            header, footer, #initial-screen, #game-container, #print-btn, #wa-btn { display: none !important; } /* Tombol WA juga disembunyikan saat cetak */
             main { padding: 0; }
             #result-area { 
                 display: block !important;
@@ -260,7 +255,6 @@
                 width: 100%;
                 margin: 0;
             }
-            /* Memastikan foto juga tercetak */
             #final-selfie {
                  max-width: 250px !important;
                  border: 1px solid black;
@@ -291,9 +285,7 @@
         <div id="game-container">
             <div id="question-area">
                 <h2 id="component-name">Posisikan Wajah di Kamera</h2>
-                
                 <video id="webcam-feed" autoplay playsinline></video>
-                
                 <img id="component-image" src="" alt="Preview Selfie" style="display:none;">
             </div>
             
@@ -308,18 +300,22 @@
             <div id="result-details">
                 </div>
             <button id="print-btn" onclick="window.print()">Cetak (Simpan PDF)</button>
-        </div>
+            
+            <button id="wa-btn" onclick="openWALink()">Kirim Laporan via WA</button>
+            <p style="font-size: 0.8em; color: #555; margin-top: 10px;">(Foto harus dilampirkan manual di WA)</p>
+            </div>
     </main>
     
     <footer>&copy; 2025 Seoludut Education Learning System</footer>
 
     <script>
-        // Variabel Global untuk menyimpan data
+        // Variabel Global
         let studentName = '';
         let studentClass = '';
         let studentNumber = '';
-        let capturedSelfieData = null; // Untuk menyimpan data URL gambar
-        let webcamStream = null; // Untuk menyimpan stream webcam
+        let capturedSelfieData = null; 
+        let webcamStream = null; 
+        let generatedWaUrl = ''; // --- VARIABEL BARU UNTUK MENYIMPAN LINK WA ---
 
         // Mengambil elemen-elemen DOM
         const initialScreen = document.getElementById('initial-screen');
@@ -335,58 +331,51 @@
         const componentImageDisplay = document.getElementById('component-image');
         const instructionText = document.getElementById('component-name');
 
-        const takeSelfieBtn = document.getElementById('biotik-btn'); // Tombol "Ambil Foto"
-        const submitBtn = document.getElementById('abiotik-btn'); // Tombol "Kirim Presensi"
+        const takeSelfieBtn = document.getElementById('biotik-btn'); 
+        const submitBtn = document.getElementById('abiotik-btn'); 
 
         /**
-         * FUNGSI UNTUK MEMULAI LANGKAH SELFIE
+         * FUNGSI START SELFIE (TETAP SAMA)
          */
         function startSelfie() {
             studentName = nameInput.value.trim();
             studentClass = classInput.value.trim();
             studentNumber = numberInput.value.trim();
             
-            // Validasi input
             if (studentName === '' || studentClass === '' || studentNumber === '') {
                 alert('Mohon isi semua data identitas (Nama, Kelas, dan Nomor Absen)!');
                 return;
             }
             
-            // Sembunyikan layar awal, tampilkan layar selfie
             initialScreen.style.display = 'none';
             resultArea.style.display = 'none';
             gameContainer.style.display = 'block';
             progressInfo.textContent = 'Langkah 2: Ambil Foto Diri';
             
-            // Mulai Webcam
             initializeWebcam();
         }
 
         /**
-         * FUNGSI UNTUK MENYALAKAN WEBCAM
+         * FUNGSI INITIALIZE WEBCAM (TETAP SAMA)
          */
         async function initializeWebcam() {
-            // Hentikan stream lama jika ada
             if (webcamStream) {
                 webcamStream.getTracks().forEach(track => track.stop());
             }
 
-            // Tampilkan video, sembunyikan preview gambar
             webcamFeed.style.display = 'block';
             componentImageDisplay.style.display = 'none';
             instructionText.textContent = "Posisikan Wajah di Kamera";
             takeSelfieBtn.disabled = false;
-            submitBtn.disabled = true; // Nonaktifkan tombol kirim
+            submitBtn.disabled = true; 
 
             try {
-                // Minta izin akses webcam
                 const constraints = { video: { facingMode: 'user' }, audio: false };
                 webcamStream = await navigator.mediaDevices.getUserMedia(constraints);
                 webcamFeed.srcObject = webcamStream;
             } catch (err) {
                 console.error("Error mengakses webcam: ", err);
                 alert("Tidak bisa mengakses webcam. Pastikan Anda memberikan izin.\n\nError: " + err.message);
-                // Kembalikan ke layar awal jika gagal
                 initialScreen.style.display = 'block';
                 gameContainer.style.display = 'none';
                 progressInfo.textContent = 'Langkah 1: Isi Identitas';
@@ -394,51 +383,42 @@
         }
 
         /**
-         * FUNGSI UNTUK MENGAMBIL FOTO
+         * FUNGSI TAKE SELFIE (TETAP SAMA)
          */
         function takeSelfie() {
-            // Buat elemen canvas tersembunyi untuk menggambar frame video
             const canvas = document.createElement('canvas');
             canvas.width = webcamFeed.videoWidth;
             canvas.height = webcamFeed.videoHeight;
             
             const context = canvas.getContext('2d');
             
-            // Balik gambar secara horizontal (karena video dicerminkan)
             context.translate(canvas.width, 0);
             context.scale(-1, 1);
             
-            // Gambar frame saat ini dari video ke canvas
             context.drawImage(webcamFeed, 0, 0, canvas.width, canvas.height);
             
-            // Dapatkan data URL dari gambar di canvas
-            capturedSelfieData = canvas.toDataURL('image/jpeg', 0.9); // Simpan sebagai JPEG
+            capturedSelfieData = canvas.toDataURL('image/jpeg', 0.9); 
             
-            // Tampilkan foto yang diambil di elemen <img>
             componentImageDisplay.src = capturedSelfieData;
             componentImageDisplay.style.display = 'block';
-            
-            // Sembunyikan feed video
             webcamFeed.style.display = 'none';
             
-            // Hentikan stream webcam
             if (webcamStream) {
                 webcamStream.getTracks().forEach(track => track.stop());
                 webcamStream = null;
             }
             
-            // Ubah UI
             instructionText.textContent = "Foto Berhasil Diambil!";
             takeSelfieBtn.textContent = "Ambil Ulang Foto";
-            takeSelfieBtn.onclick = initializeWebcam; // Ganti fungsi tombol menjadi "Ambil Ulang"
+            takeSelfieBtn.onclick = initializeWebcam; 
             
-            submitBtn.disabled = false; // Aktifkan tombol "Kirim Presensi"
+            submitBtn.disabled = false; 
             submitBtn.textContent = "Kirim Presensi";
             submitBtn.onclick = submitAttendance;
         }
 
         /**
-         * FUNGSI UNTUK MENGIRIM PRESENSI (MENAMPILKAN HASIL)
+         * FUNGSI SUBMIT ATTENDANCE (DIMODIFIKASI)
          */
         function submitAttendance() {
             if (!capturedSelfieData) {
@@ -446,21 +426,65 @@
                 return;
             }
             
-            // Sembunyikan layar selfie, tampilkan layar hasil
+            // --- LOGIKA BARU UNTUK HARI, TANGGAL, JAM ---
+            const now = new Date();
+            const options = { timeZone: 'Asia/Jakarta', hour12: false }; // Set Zona Waktu WIB
+            
+            const hari = now.toLocaleString('id-ID', { ...options, weekday: 'long' });
+            const tanggal = now.toLocaleString('id-ID', { ...options, day: 'numeric', month: 'long', year: 'numeric' });
+            const jam = now.toLocaleString('id-ID', { ...options, hour: '2-digit', minute: '2-digit' }) + " WIB";
+            // --- AKHIR LOGIKA BARU ---
+
             gameContainer.style.display = 'none';
             resultArea.style.display = 'block';
             progressInfo.textContent = 'Presensi Berhasil Terkirim';
             
-            // Buat ringkasan hasil
+            // Buat ringkasan hasil (DENGAN TAMBAHAN HARI, TANGGAL, JAM)
             const outputText = `
                 <p><strong>Nama Lengkap:</strong> ${studentName}</p>
                 <p><strong>Kelas:</strong> ${studentClass}</p>
                 <p><strong>Nomor Absen:</strong> ${studentNumber}</p>
+                <hr>
+                <p><strong>Hari Presensi:</strong> ${hari}</p>
+                <p><strong>Tanggal Presensi:</strong> ${tanggal}</p>
+                <p><strong>Jam Presensi:</strong> ${jam}</p>
+                <hr>
                 <p><strong>Foto Presensi:</strong></p>
                 <img id="final-selfie" src="${capturedSelfieData}" alt="Foto Presensi ${studentName}">
             `;
             
             document.getElementById('result-details').innerHTML = outputText;
+
+            // --- LOGIKA BARU UNTUK MEMBUAT LINK WA ---
+            // Ganti 08 menjadi 62
+            const waNumber = "6285179702171"; 
+            
+            // Buat template pesan teks
+            let waMessage = `*Laporan Presensi (Otomatis)*\n\n`;
+            waMessage += `*Nama:* ${studentName}\n`;
+            waMessage += `*Kelas:* ${studentClass}\n`;
+            waMessage += `*No. Absen:* ${studentNumber}\n`;
+            waMessage += `*Waktu:* ${hari}, ${tanggal} - ${jam}\n\n`;
+            waMessage += `_Mohon lampirkan foto selfie secara manual._`;
+
+            // Encode pesan untuk URL
+            const encodedMessage = encodeURIComponent(waMessage);
+            
+            // Simpan URL ke variabel global
+            generatedWaUrl = `https://wa.me/${waNumber}?text=${encodedMessage}`;
+            // --- AKHIR LOGIKA BARU WA ---
+        }
+
+        /**
+         * --- FUNGSI BARU UNTUK MEMBUKA LINK WA ---
+         */
+        function openWALink() {
+            if (generatedWaUrl) {
+                // Buka link WA di tab baru
+                window.open(generatedWaUrl, '_blank');
+            } else {
+                alert("Terjadi kesalahan, URL WhatsApp tidak bisa dibuat.");
+            }
         }
 
     </script>
